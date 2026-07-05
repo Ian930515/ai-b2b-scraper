@@ -19,14 +19,13 @@ st.markdown("""
 
 st.divider()
 
-# 3. 側邊欄輸入區 (Sidebar)
+# 3. 側邊欄輸入區 (Sidebar) - 已整合防呆下拉選單，絕無重複 ID
 st.sidebar.header("🎯 搜尋參數設定")
-keyword = st.sidebar.text_input("搜尋產業關鍵字 (e.g., Cafe, Dental, Marketing)", "Digital Marketing")
-# 3. 側邊欄輸入區 (Sidebar)
-st.sidebar.header("🎯 搜尋參數設定")
+
+# 關鍵字輸入框 (只保留這一個)
 keyword = st.sidebar.text_input("搜尋產業關鍵字 (e.g., Cafe, Dental, Marketing)", "Digital Marketing")
 
-# ⭕ 核心修正：將地理位置文字輸入框，改成防呆下拉選單！
+# 地區下拉選單 (只保留這一個，完美防呆)
 location = st.sidebar.selectbox(
     "搜尋地理位置 (美國主要城市)",
     options=[
@@ -37,7 +36,7 @@ location = st.sidebar.selectbox(
         "Miami, FL",
         "Seattle, WA"
     ],
-    index=0 # 預設選取第一個 (New York)
+    index=0
 )
 
 # 開始按鈕
