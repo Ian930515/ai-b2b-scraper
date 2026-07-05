@@ -1,4 +1,3 @@
-import streamlit as tf # 通常習慣 import streamlit as st，但為求乾淨我們這樣寫
 import streamlit as st
 import pandas as pd
 from src.scraper import B2BScraper
@@ -10,6 +9,21 @@ st.set_page_config(
     page_icon="🔍",
     layout="wide" # 使用寬螢幕佈局，方便展示表格數據
 )
+
+# ==========================================
+# 💡 核心安全機制：使用快取鎖定後端實例，防止多執行緒衝突
+# ==========================================
+@st.cache_resource
+def get_backend_instances():
+    """
+    確保整台雲端伺服器在運作期間，永遠只初始化一個爬蟲與分析實例。
+    這能徹底根除重新整理（Refresh）網頁時，Playwright 併發搶奪資源導致的錯誤。
+    """
+    return B2BScraper(), LeadAnalyzer()
+
+# 初始化快取實例
+scraper, analyzer = get_backend_instances()
+# ==========================================
 
 # 2. 標題與介紹區塊
 st.title("🔍 AI-Powered B2B Leads Intelligence Scraper")
@@ -30,10 +44,6 @@ start_button = st.sidebar.button("🚀 開始挖掘與 AI 分析")
 
 # 4. 主要顯示邏輯
 if start_button:
-    # 初始化我們的後端模組
-    scraper = B2BScraper()
-    analyzer = LeadAnalyzer()
-    
     # 步驟一：跑爬蟲
     with st.spinner("🕵️‍♂️ 正在模擬瀏覽器安全爬取網頁數據中，請稍候..."):
         raw_leads = scraper.scrape_yellowpages(keyword, location)
