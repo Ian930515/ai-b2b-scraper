@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-from concurrent.futures import ThreadPoolExecutor
 from src.scraper import B2BScraper
 from src.ai_analyzer import LeadAnalyzer
 
-# 1. 網頁基本設定
+# 1. 網頁基本設定 (Page Config)
 st.set_page_config(
     page_title="AI B2B Leads Intelligence Scraper",
     page_icon="🔍",
@@ -20,11 +19,12 @@ st.markdown("""
 
 st.divider()
 
-# 3. 側邊欄輸入區
+# 3. 側邊欄輸入區 (Sidebar)
 st.sidebar.header("🎯 搜尋參數設定")
 keyword = st.sidebar.text_input("搜尋產業關鍵字 (e.g., Cafe, Dental, Marketing)", "Digital Marketing")
 location = st.sidebar.text_input("搜尋地理位置 (e.g., New York, NY)", "New York, NY")
 
+# 開始按鈕
 start_button = st.sidebar.button("🚀 開始挖掘與 AI 分析")
 
 # 4. 主要顯示邏輯
@@ -32,11 +32,9 @@ if start_button:
     scraper = B2BScraper()
     analyzer = LeadAnalyzer()
     
-    # 💡 隔離執行緒：避開 Streamlit Cloud 內建 Event Loop 的衝突
-    with st.spinner("🕵️‍♂️ 正在隔離執行緒中安全爬取網頁數據中，請稍候..."):
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(scraper.scrape_yellowpages, keyword, location)
-            raw_leads = future.result()
+    # 步驟一：跑爬蟲
+    with st.spinner("🕵️‍♂️ 正在安全爬取公開名單數據中，請稍候..."):
+        raw_leads = scraper.scrape_yellowpages(keyword, location)
         
     if not raw_leads:
         st.error("❌ 抱歉，未能抓取到任何資料，請檢查關鍵字或網路連線。")
@@ -49,6 +47,8 @@ if start_button:
             
         # 步驟三：資料轉換與視覺化
         df = pd.DataFrame(final_reports)
+        
+        # 調整欄位順序
         cols = ['company_name', 'lead_score', 'primary_pain_point', 'action_suggestion', 'phone', 'website']
         df = df[cols]
         
@@ -76,10 +76,11 @@ if start_button:
             use_container_width=True
         )
         
+        # 步驟四：提供下載功能
         st.divider()
         st.subheader("💾 匯出名單資料")
-        csv = df.to_csv(index=False).encode('utf-8-sig')
         
+        csv = df.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
             label="📥 下載精準客戶情報 Excel (CSV)",
             data=csv,
