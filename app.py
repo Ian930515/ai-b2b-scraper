@@ -22,7 +22,23 @@ st.divider()
 # 3. 側邊欄輸入區 (Sidebar)
 st.sidebar.header("🎯 搜尋參數設定")
 keyword = st.sidebar.text_input("搜尋產業關鍵字 (e.g., Cafe, Dental, Marketing)", "Digital Marketing")
-location = st.sidebar.text_input("搜尋地理位置 (e.g., New York, NY)", "New York, NY")
+# 3. 側邊欄輸入區 (Sidebar)
+st.sidebar.header("🎯 搜尋參數設定")
+keyword = st.sidebar.text_input("搜尋產業關鍵字 (e.g., Cafe, Dental, Marketing)", "Digital Marketing")
+
+# ⭕ 核心修正：將地理位置文字輸入框，改成防呆下拉選單！
+location = st.sidebar.selectbox(
+    "搜尋地理位置 (美國主要城市)",
+    options=[
+        "New York, NY",
+        "Los Angeles, CA",
+        "Chicago, IL",
+        "Houston, TX",
+        "Miami, FL",
+        "Seattle, WA"
+    ],
+    index=0 # 預設選取第一個 (New York)
+)
 
 # 開始按鈕
 start_button = st.sidebar.button("🚀 開始挖掘與 AI 分析")
