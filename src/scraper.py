@@ -12,22 +12,21 @@ class B2BScraper:
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         ]
 
-    def scrape_yellowpages(self, keyword: str, location: str):
+def scrape_yellowpages(self, keyword: str, location: str):
         formatted_keyword = keyword.replace(" ", "+")
         formatted_location = location.replace(" ", "+").replace(",", "%2C")
         url = f"https://www.yellowpages.com/search?search_terms={formatted_keyword}&geo_location_terms={formatted_location}"
-        print(f"[LOG] 正在啟動 Playwright 模擬瀏覽器請求: {url}")
+        print(f"[LOG] 正在啟動 Playwright 模擬瀏覽器: {url}")
+
+        # ⭕ 正確位置：放在 with 之外！每次執行前先強迫系統補齊依賴與 Chromium
+        print("[LOG] 正在雲端環境初始化 Playwright 系統依賴 (含系統庫)...")
+        os.system("playwright install chromium --with-deps")
 
         leads_data = []
 
-        # 啟動 Playwright 內容管理器
+        # 進入純粹的自動化控制流程
         with sync_playwright() as p:
-            # headless=True 代表在幕後執行，不彈出瀏覽器視窗；接案時通常設為 True 提升效能
-            print("[LOG] 正在雲端環境初始化 Playwright 瀏覽器核心...")
-            os.system("playwright install chromium")
             browser = p.chromium.launch(headless=True)
-            
-            # 建立一個獨立的瀏覽器上下文，並塞入隨機的 User-Agent 偽裝
             context = browser.new_context(
                 user_agent=random.choice(self.user_agents),
                 viewport={"width": 1280, "height": 800}
