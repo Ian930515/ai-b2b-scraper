@@ -18,9 +18,19 @@ class B2BScraper:
 
         leads_data = []
 
-        # 回歸純粹的同步 with，交給獨立執行緒管理生命週期
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            # 💡 終極防禦：如果找不到專屬核心，直接強迫 Playwright 使用 Linux 系統自帶的 Chromium
+            try:
+                print("[LOG] 嘗試使用系統內建 Chromium 啟動...")
+                browser = p.chromium.launch(
+                    executable_path="/usr/bin/chromium", # Linux 系統標準的 chromium 安裝路徑
+                    headless=True
+                )
+            except Exception as launch_err:
+                print(f"[WARN] 指定路徑啟動失敗: {launch_err}，嘗試退回預設啟動...")
+                # 備用方案：如果路徑不對，嘗試退回預設
+                browser = p.chromium.launch(headless=True)
+
             context = browser.new_context(
                 user_agent=random.choice(self.user_agents),
                 viewport={"width": 1280, "height": 800}
