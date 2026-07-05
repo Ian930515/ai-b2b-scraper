@@ -12,7 +12,8 @@ class B2BScraper:
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         ]
 
-def scrape_yellowpages(self, keyword: str, location: str):
+    # ⭕ 修正重點：這裡必須縮排，成為 class 的成員方法！
+    def scrape_yellowpages(self, keyword: str, location: str):
         formatted_keyword = keyword.replace(" ", "+")
         formatted_location = location.replace(" ", "+").replace(",", "%2C")
         url = f"https://www.yellowpages.com/search?search_terms={formatted_keyword}&geo_location_terms={formatted_location}"
@@ -88,6 +89,7 @@ def scrape_yellowpages(self, keyword: str, location: str):
 
         return leads_data
 
+# 🛑 這裡不用縮排，這是主程式入口
 if __name__ == "__main__":
     # 本地直接測試
     scraper = B2BScraper()
