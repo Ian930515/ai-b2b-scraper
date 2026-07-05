@@ -2,6 +2,7 @@ import time
 import random
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
+import os
 
 class B2BScraper:
     def __init__(self):
@@ -22,6 +23,8 @@ class B2BScraper:
         # 啟動 Playwright 內容管理器
         with sync_playwright() as p:
             # headless=True 代表在幕後執行，不彈出瀏覽器視窗；接案時通常設為 True 提升效能
+            print("[LOG] 正在雲端環境初始化 Playwright 瀏覽器核心...")
+            os.system("playwright install chromium")
             browser = p.chromium.launch(headless=True)
             
             # 建立一個獨立的瀏覽器上下文，並塞入隨機的 User-Agent 偽裝
