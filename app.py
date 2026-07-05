@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from src.scraper import B2BScraper
 from src.ai_analyzer import LeadAnalyzer
 
@@ -32,9 +32,11 @@ if start_button:
     scraper = B2BScraper()
     analyzer = LeadAnalyzer()
     
-    # 步驟一：跑爬蟲 (改用 asyncio.run 執行異步爬蟲，徹底解決多執行緒衝突)
-    with st.spinner("🕵️‍♂️ 正在模擬瀏覽器安全爬取網頁數據中，請稍候..."):
-        raw_leads = asyncio.run(scraper.scrape_yellowpages(keyword, location))
+    # 💡 隔離執行緒：避開 Streamlit Cloud 內建 Event Loop 的衝突
+    with st.spinner("🕵️‍♂️ 正在隔離執行緒中安全爬取網頁數據中，請稍候..."):
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(scraper.scrape_yellowpages, keyword, location)
+            raw_leads = future.result()
         
     if not raw_leads:
         st.error("❌ 抱歉，未能抓取到任何資料，請檢查關鍵字或網路連線。")
@@ -85,4 +87,4 @@ if start_button:
             mime="text/csv"
         )
 else:
-    st.info("💡 請在左側輸入你想挖掘的行業與地區，並點擊「開始挖掘與 AI 分析」按庫鈕。")
+    st.info("💡 請在左側輸入你想挖掘的行業與地區，並點擊「開始挖掘與 AI 分析」按鈕。")
