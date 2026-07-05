@@ -10,21 +10,6 @@ st.set_page_config(
     layout="wide" # 使用寬螢幕佈局，方便展示表格數據
 )
 
-# ==========================================
-# 💡 核心安全機制：使用快取鎖定後端實例，防止多執行緒衝突
-# ==========================================
-@st.cache_resource
-def get_backend_instances():
-    """
-    確保整台雲端伺服器在運作期間，永遠只初始化一個爬蟲與分析實例。
-    這能徹底根除重新整理（Refresh）網頁時，Playwright 併發搶奪資源導致的錯誤。
-    """
-    return B2BScraper(), LeadAnalyzer()
-
-# 初始化快取實例
-scraper, analyzer = get_backend_instances()
-# ==========================================
-
 # 2. 標題與介紹區塊
 st.title("🔍 AI-Powered B2B Leads Intelligence Scraper")
 st.markdown("""
@@ -44,6 +29,10 @@ start_button = st.sidebar.button("🚀 開始挖掘與 AI 分析")
 
 # 4. 主要顯示邏輯
 if start_button:
+    # ⭕ 每次點擊都創建全新、乾淨的實例，絕不卡死舊的通訊管線
+    scraper = B2BScraper()
+    analyzer = LeadAnalyzer()
+    
     # 步驟一：跑爬蟲
     with st.spinner("🕵️‍♂️ 正在模擬瀏覽器安全爬取網頁數據中，請稍候..."):
         raw_leads = scraper.scrape_yellowpages(keyword, location)
@@ -105,3 +94,4 @@ if start_button:
 else:
     # 初始未點擊按鈕的歡迎畫面
     st.info("💡 請在左側輸入你想挖掘的行業與地區，並點擊「開始挖掘與 AI 分析」按鈕。")
+    
