@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
+import asyncio
 from src.scraper import B2BScraper
 from src.ai_analyzer import LeadAnalyzer
 
-# 1. 網頁基本設定 (Page Config)
+# 1. 網頁基本設定
 st.set_page_config(
     page_title="AI B2B Leads Intelligence Scraper",
     page_icon="🔍",
-    layout="wide" # 使用寬螢幕佈局，方便展示表格數據
+    layout="wide"
 )
 
 # 2. 標題與介紹區塊
@@ -17,25 +18,23 @@ st.markdown("""
 並結合 **OpenAI 核心大模型** 進行商業痛點分析，自動化生成精準的開發名單！
 """)
 
-st.divider() # 畫一條橫線分開區塊
+st.divider()
 
-# 3. 側邊欄輸入區 (Sidebar) - 客戶最喜歡這種控制面板感
+# 3. 側邊欄輸入區
 st.sidebar.header("🎯 搜尋參數設定")
 keyword = st.sidebar.text_input("搜尋產業關鍵字 (e.g., Cafe, Dental, Marketing)", "Digital Marketing")
 location = st.sidebar.text_input("搜尋地理位置 (e.g., New York, NY)", "New York, NY")
 
-# 開始按鈕
 start_button = st.sidebar.button("🚀 開始挖掘與 AI 分析")
 
 # 4. 主要顯示邏輯
 if start_button:
-    # ⭕ 每次點擊都創建全新、乾淨的實例，絕不卡死舊的通訊管線
     scraper = B2BScraper()
     analyzer = LeadAnalyzer()
     
-    # 步驟一：跑爬蟲
+    # 步驟一：跑爬蟲 (改用 asyncio.run 執行異步爬蟲，徹底解決多執行緒衝突)
     with st.spinner("🕵️‍♂️ 正在模擬瀏覽器安全爬取網頁數據中，請稍候..."):
-        raw_leads = scraper.scrape_yellowpages(keyword, location)
+        raw_leads = asyncio.run(scraper.scrape_yellowpages(keyword, location))
         
     if not raw_leads:
         st.error("❌ 抱歉，未能抓取到任何資料，請檢查關鍵字或網路連線。")
@@ -48,12 +47,10 @@ if start_button:
             
         # 步驟三：資料轉換與視覺化
         df = pd.DataFrame(final_reports)
-        
-        # 調整欄位順序，讓畫面更好看
         cols = ['company_name', 'lead_score', 'primary_pain_point', 'action_suggestion', 'phone', 'website']
         df = df[cols]
         
-        # 顯示指標小卡 (Metrics)
+        # 顯示指標小卡
         col1, col2 = st.columns(2)
         with col1:
             st.metric(label="總挖掘名單數", value=f"{len(df)} 筆")
@@ -63,8 +60,6 @@ if start_button:
             
         # 顯示互動式數據表格
         st.subheader("📊 智能 B2B 客戶情報面板")
-        
-        # 使用 Streamlit 高階 dataframe 元件，讓客戶可以自己在網頁上排序、搜尋
         st.dataframe(
             df,
             column_config={
@@ -79,11 +74,9 @@ if start_button:
             use_container_width=True
         )
         
-        # 步驟四：提供 Excel/CSV 下載功能（業主痛點：他們需要把資料匯入 CRM 系統）
         st.divider()
         st.subheader("💾 匯出名單資料")
-        
-        csv = df.to_csv(index=False).encode('utf-8-sig') # utf-8-sig 確保 Excel 打開中文不會亂碼
+        csv = df.to_csv(index=False).encode('utf-8-sig')
         
         st.download_button(
             label="📥 下載精準客戶情報 Excel (CSV)",
@@ -92,6 +85,4 @@ if start_button:
             mime="text/csv"
         )
 else:
-    # 初始未點擊按鈕的歡迎畫面
-    st.info("💡 請在左側輸入你想挖掘的行業與地區，並點擊「開始挖掘與 AI 分析」按鈕。")
-    
+    st.info("💡 請在左側輸入你想挖掘的行業與地區，並點擊「開始挖掘與 AI 分析」按庫鈕。")

@@ -1,7 +1,8 @@
-import time
+import asyncio
 import random
+import time
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 
 class B2BScraper:
     def __init__(self):
@@ -10,36 +11,37 @@ class B2BScraper:
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
         ]
 
-    def scrape_yellowpages(self, keyword: str, location: str):
+    async def scrape_yellowpages(self, keyword: str, location: str):
         formatted_keyword = keyword.replace(" ", "+")
         formatted_location = location.replace(" ", "+").replace(",", "%2C")
         url = f"https://www.yellowpages.com/search?search_terms={formatted_keyword}&geo_location_terms={formatted_location}"
-        print(f"[LOG] 正在啟動 Playwright 模擬瀏覽器: {url}")
+        print(f"[LOG] [Async] 正在啟動 Playwright 模擬瀏覽器: {url}")
 
         leads_data = []
 
-        # ⭕ 乾淨的 with 區塊，不夾帶 os.system 
-        with sync_playwright() as p:
-            # 這裡就是第 30 行 launch 的地方
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
+        # 改用 async_playwright 建立完全隔離的異步環境
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context(
                 user_agent=random.choice(self.user_agents),
                 viewport={"width": 1280, "height": 800}
             )
             
-            page = context.new_page()
+            page = await context.new_page()
             
             try:
-                time.sleep(random.uniform(1.0, 2.5))
-                response = page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                print(f"[LOG] Playwright 攔截到伺服器狀態碼: {response.status}")
+                # 異步等待
+                await asyncio.sleep(random.uniform(1.0, 2.0))
+                
+                response = await page.goto(url, wait_until="domcontentloaded", timeout=25000)
+                print(f"[LOG] 攔截到狀態碼: {response.status}")
                 
                 if response.status != 200:
-                    browser.close()
+                    await browser.close()
                     return []
 
-                page.wait_for_timeout(1500)
-                html_content = page.content()
+                await page.wait_for_timeout(1500)
+                html_content = await page.content()
                 
                 soup = BeautifulSoup(html_content, "html.parser")
                 search_results = soup.find_all("div", class_="result")
@@ -66,8 +68,8 @@ class B2BScraper:
                         continue
 
             except Exception as e:
-                print(f"[CRITICAL] Playwright 執行發生異常: {e}")
+                print(f"[CRITICAL] Async Playwright 異常: {e}")
             finally:
-                browser.close()
+                await browser.close()
 
         return leads_data
